@@ -1,58 +1,77 @@
 // src/entities/Service.ts
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { PaymentPeriods } from './PaymentPeriods'; // Asumiendo que esta entidad existe o se creará
+import {Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn, CreateDateColumn, ManyToOne, OneToMany} from 'typeorm';
+import { User } from './User';
+import { Voucher } from './Voucher';
+import { Logo } from './Logo';
+import { Report } from './Report';
+import { ServiceAffiliate } from './ServiceAffiliate';
 
-@Entity('service') // Corregido: Mapea a la tabla `service`
-export class Service {
+@Entity('services')
+export class Service{
 
     @PrimaryGeneratedColumn()
-    id!: number;
+    id!:number;
+
+    @Column()
+    nombre!: string;
+
+    @Column()
+    descripcion!: string;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
+    costoServicio!: number;
+
+    @Column({type:'enum', enum:['variable', 'estatica'], default:'estatica'})
+    naturalezaPago!: 'variable'|'estatica';
+
+    @Column({type:'enum', enum:['equitativa', 'porcentual'], default:'equitativa'})
+    reparticionPago!: 'equitativa'|'porcentual';
+
+    @Column()
+    porcentaje!: number;
+
+    @Column({type:'enum', enum:['por periodos', 'fecha fija'], default:'por periodos'})
+    modalidadPago!: 'por periodos'|'fecha fija';
+
+    @Column()
+    periodoPago!: number;
+
+    @Column({default: false})
+    pagoRealizado!: boolean;
+
+    @Column({ type:'enum', enum:['publico', 'privado'], default: 'privado'})
+    visibilidad!: 'publico'|'privado';
+
+    @Column({ default: false })
+    suspendido!: boolean;
+
+    @CreateDateColumn({ 
+        type: 'timestamp', 
+        default: () => 'CURRENT_TIMESTAMP(6)' 
+    })
+    createdAt!: Date;
+
+    @UpdateDateColumn({ 
+        type: 'timestamp', 
+        default: () => 'CURRENT_TIMESTAMP(6)', 
+        onUpdate: 'CURRENT_TIMESTAMP(6)' 
+    })
+    updatedAt!: Date;
+
+    @ManyToOne(() => User, (user) => user.servicios)
+    usuario!: User;
+
+    @OneToMany(() => Voucher, (voucher) => voucher.service)
+    vouchers!: Voucher[];
+
+    @ManyToOne(() => Logo, (logo) => logo.service)
+    logo!: Logo;
+
+    @OneToMany(() => Report, (report) => report.servicio)
+    reporte!: Report[];
+
+    @OneToMany(() => ServiceAffiliate, (afiliate) => afiliate.Servicio)
+    usuarioAfiliado!: ServiceAffiliate[];
     
-    // --- Relaciones de Clave Foránea (FK) ---
-    
-    // 1. Relación con PaymentPeriods (payment_period_id_fk)
-    @Column({ name: 'payment_period_id_fk', type: 'int', nullable: true })
-    paymentPeriodIdFk!: number | null;
-
-    @ManyToOne(() => PaymentPeriods)
-    @JoinColumn({ name: 'payment_period_id_fk' }) // Especifica la columna FK en esta entidad
-    paymentPeriod!: PaymentPeriods; // Propiedad para cargar la relación
-    
-    // --- Columnas de Datos ---
-
-    @Column({ type: 'varchar', length: 255 })
-    name!: string;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    description!: string | null; // DDL permite NULL
-
-    @Column({ type: 'int' })
-    type!: number; // Tipo de servicio (no hay columna 'nature' en el DDL)
-
-    @Column({ type: 'double', default: 0 }) // Usamos 'double' para reflejar el DDL 'DOUBLE'
-    amount!: number;
-
-    @Column({ name: 'expiry_date', type: 'date', nullable: true }) // DDL: fech_v
-    expiry_date!: Date | null;
-
-    @Column({ type: 'int', default: 0 }) // DDL: visibilidad
-    visibility!: number;
-
-    @Column({ nullable: true, type: 'varchar', length: 255 })
-    logo!: string | null;
-
-    @Column({ type: 'int' })
-    distribution!: number;
-
-    // --- Marcas de Tiempo ---
-
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-    created_at!: Date;
-
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-    updated_at!: Date;
-    
-    // NOTA: La columna 'creator_id' de tu borrador original no existe en la tabla MySQL final.
 }
-

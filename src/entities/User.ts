@@ -1,60 +1,88 @@
 // src/entities/User.ts
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Location } from './Location'; // Asumiendo que crearás o ya tienes la entidad Location
+import {Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn, CreateDateColumn, OneToMany, ManyToOne, OneToOne, JoinColumn} from 'typeorm';
+import { Service } from './Service';
+import { Voucher } from './Voucher';
+import { Photo } from './Photo';
+import { Message } from './Message';
+import { Location } from './Location';
+import { Report } from './Report';
+import { FriendShip } from './FriendShip';
+import { ServiceAffiliate } from './ServiceAffiliate';
 
-@Entity('User') // Aseguramos que el nombre coincida con la tabla MySQL
+@Entity('users')
 export class User {
 
     @PrimaryGeneratedColumn()
     id!: number;
 
-    // --- Relaciones de Clave Foránea (FK) ---
-    
-    // 1. Relación con Location (location_id_fk)
-    @Column({ name: 'location_id_fk', type: 'int', nullable: true })
-    locationIdFk!: number | null;
+    @Column()
+    nombres!: string;
 
-    @ManyToOne(() => Location)
-    @JoinColumn({ name: 'location_id_fk' }) // Especifica la columna FK en esta entidad
-    location!: Location;
+    @Column()
+    apellidos!: string;
 
-    // --- Columnas de Datos Personales ---
+    @Column({type: 'enum', enum: ['user', 'admin'], default: 'user'})
+    roles!: 'admin' | 'user';
 
-    @Column({ type: 'varchar', length: 255 })
-    first_names!: string; // Renombrado de 'first_name' a 'first_names' (DDL: nombres)
+    @Column({default:false})
+    suspendido!: boolean;
 
-    @Column({ type: 'varchar', length: 255 }) // El DDL era 255
-    last_names!: string; // Renombrado de 'last_name' a 'last_names' (DDL: apellidos)
+    @Column()
+    celular!: string;
 
-    @Column({ type: 'varchar', length: 255, unique: true }) // El DDL era 255
+    @Column({unique: true})
+    dni!: string;
+
+    @Column({unique: true})
     email!: string;
 
-    @Column({ type: 'int', default: 2 })
-    role!: number;
+    @Column()
+    password!: string;
 
-    @Column({ name: 'status', type: 'int', default: 1 }) // Nombre de columna: status (DDL)
-    status!: number; // Tipo de TS/JS (DDL: estado, int)
+    @Column({ type: 'date', nullable:true})
+    fechaNacimiento!: Date;
 
-    @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
-    dni!: string | null;
+    @CreateDateColumn({type:'timestamp', default: () => 'CURRENT_TIMESTAMP(6)'})
+    createdAt!: Date;
 
-    @Column({ name: 'phone_number', type: 'varchar', length: 20, nullable: true }) // Nombre de columna: phone_number (DDL)
-    phone_number!: string | null; // (DDL: celular)
+    @UpdateDateColumn({type:'timestamp', default: () => 'CURRENT_TIMESTAMP(6)'})
+    updatedAt!: Date;
 
-    @Column({ name: 'birth_date', type: 'date', nullable: true })
-    birth_date!: Date | null;
+    @OneToMany(() => Service, (service) => service.usuario)
+    servicios!: Service[];
 
-    // --- Columna de Contraseña ---
-    // Usamos 'password' para que coincida con la DB, pero con un nombre de propiedad más descriptivo en TS
-    @Column({ name: 'password', type: 'varchar', length: 255, nullable: false }) 
-    password_hash!: string; // Lo marcamos como NOT NULL en el DDL, por lo que no es 'null' en TS.
+    @OneToMany(() => Voucher, (vouchers) => vouchers.usuario)
+    vouchers!: Voucher[];
 
-    // --- Marcas de Tiempo ---
+    @OneToMany(() => Voucher, (vouchers) => vouchers.usuario)
+    receptor_pago!: Voucher[];
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-    created_at!: Date;
+    @ManyToOne(() => Photo, (fotos) => fotos.usuario)
+    fotos!: Photo;
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-    updated_at!: Date;
+    @OneToOne(() => Location, (location) => location.usuario)
+    @JoinColumn({ name: 'location_id' })
+    ubicacion!: Location;
+
+    @OneToMany(() => Report, (report) => report.denunciante)
+    creador_reporte!: Report[];
+
+    @OneToMany(() => Report, (report) => report.denunciado)
+    receptor_reporte!: Report[];
+
+    @OneToMany(() => FriendShip, (friendShip) => friendShip.emisor)
+    amigoEmisor!: FriendShip[];
+
+    @OneToMany(() => FriendShip, (friendShip) => friendShip.receptor)
+    amigoReceptor!: FriendShip[];
+
+    @OneToMany(() => Message, (messaje) => messaje.emisor)
+    mensajeEmisor!: Message[];
+
+    @OneToMany(() => Message, (messaje) => messaje.receptor)
+    mensajeReceptor!: Message[];
+
+    @OneToMany(() => ServiceAffiliate, (afiliate) => afiliate.Afiliado)
+    servicioAfiliado!: ServiceAffiliate[];
 }

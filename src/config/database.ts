@@ -7,19 +7,26 @@ import * as path from 'path';
 export const AppDataSource = new DataSource({
     type: 'mysql',
     host: 'localhost',
-    port: 3306,
+    port: 3307,
     username: 'root',
-    password: '',
-    database: 'service_manager',
+    password: '123456',
+    database: 'smalpa',
 
     entities: [
         path.join(__dirname, '..', 'entities', '*.{ts,js}')
     ],
 
+    extra: {
+    connectionLimit: 5
+    },
+    ssl: {
+        rejectUnauthorized: false
+    },
+
     migrations: [],
     subscribers: [],
 
-    synchronize: false, // ✅ No tocar estructuras existentes
+    synchronize: true, // ✅ No tocar estructuras existentes
     logging: true, // Te sirve para ver consultas y errores
 });
 
